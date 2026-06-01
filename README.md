@@ -126,6 +126,14 @@ Exemplo de payload enviado:
 ```
 
 ---
+## Dashboards gerados pelo Grafana
+# Dashboard 1
+<img width="1492" height="693" alt="image" src="https://github.com/user-attachments/assets/871873d8-f9dc-4f4d-bb0e-da9de0f0bd8b" />
+
+# Dashboard 2
+<img width="1522" height="820" alt="image" src="https://github.com/user-attachments/assets/6d0f2d62-7f10-44ca-8d0d-40859fc45633" />
+
+
 
 ## 🚨 Sistema de alerta
 
@@ -135,6 +143,11 @@ Quando o nível da lixeira ultrapassa **85%**, o sistema:
 - Publica alerta via MQTT
 - Registra evento no InfluxDB
 - Alerta é enviado por uma API do Telegram
+
+---
+
+## Link da Apresentação
+https://youtu.be/anO3y3dcS6Q
 
 ---
 
