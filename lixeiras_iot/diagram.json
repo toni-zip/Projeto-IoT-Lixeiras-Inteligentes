@@ -1,0 +1,11 @@
+{
+  "type": "wokwi-hc-sr04",
+  "id": "ultrassonico",
+  "attrs": { "distance": "10" },
+  "connections": [
+    ["esp:5", "ultrassonico:TRIG", "green", []],
+    ["esp:18", "ultrassonico:ECHO", "blue", []],
+    ["esp:GND.1", "ultrassonico:GND", "black", []],
+    ["esp:3V3", "ultrassonico:VCC", "red", []]
+  ]
+}
