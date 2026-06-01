@@ -94,14 +94,8 @@ Telegram
 
 # 📂 Estrutura do Repositório
 
-```text
-Projeto-IoT-Lixeiras-Inteligentes
-│
-├── README.md
-├── Trabalho_IoT_LixeirasInteligentes_Final.pdf
-├── nodeRedLixosIOT-2.json
-└── Lixeiras_IOT
-```
+<img width="1633" height="945" alt="image" src="https://github.com/user-attachments/assets/225a92ac-2ce0-4d80-9476-9e131c08ad76" />
+
 
 ---
 
@@ -200,11 +194,13 @@ mackenzie/dashboard/status
 
 ## Dashboard 1 - Visão Geral
 
-Cole a imagem atual do Dashboard 1.
+<img width="1492" height="693" alt="image" src="https://github.com/user-attachments/assets/17402afa-c930-4af1-b1e8-31a93ca7b788" />
+
 
 ## Dashboard 2 - Monitoramento Individual
 
-Cole a imagem atual do Dashboard 2.
+<img width="1522" height="820" alt="image" src="https://github.com/user-attachments/assets/fb5d025c-539d-4b35-b01e-1836e9c5a3a2" />
+
 
 ---
 
