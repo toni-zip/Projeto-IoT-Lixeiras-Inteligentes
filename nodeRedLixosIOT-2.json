@@ -1,0 +1,312 @@
+[
+    {
+        "id": "9dfae3c1d5d0d977",
+        "type": "tab",
+        "label": "Lixeiras IoT",
+        "disabled": false,
+        "info": "Fluxo principal: recebe dados das 6 lixeiras, salva no InfluxDB e gera alertas críticos."
+    },
+    {
+        "id": "1f444c8f2ec947b1",
+        "type": "comment",
+        "z": "9dfae3c1d5d0d977",
+        "name": "── RECEPÇÃO MQTT (6 lixeiras) ──",
+        "info": "Cada lixeira publica no tópico mackenzie/lixeiras/<ID>.\nUm único subscriber com wildcard # captura todas.",
+        "x": 180,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "35b8bb0f049c1d8a",
+        "type": "mqtt in",
+        "z": "9dfae3c1d5d0d977",
+        "name": "Todas as Lixeiras (wildcard)",
+        "topic": "mackenzie/lixeiras/#",
+        "qos": "2",
+        "broker": "broker-hivemq",
+        "inputs": 0,
+        "x": 180,
+        "y": 120,
+        "wires": [
+            [
+                "6898bb3c3b67ff01"
+            ]
+        ]
+    },
+    {
+        "id": "6898bb3c3b67ff01",
+        "type": "json",
+        "z": "9dfae3c1d5d0d977",
+        "name": "Parse JSON",
+        "action": "obj",
+        "x": 390,
+        "y": 120,
+        "wires": [
+            [
+                "4a6c90b6c9d9d035",
+                "a790e860237af418",
+                "f8fe7c7de081cceb",
+                "81e1e12e957a4a3b",
+                "68343b1fe56d45f8"
+            ]
+        ]
+    },
+    {
+        "id": "4a6c90b6c9d9d035",
+        "type": "debug",
+        "z": "9dfae3c1d5d0d977",
+        "name": "Debug raw",
+        "active": true,
+        "tosidebar": true,
+        "x": 390,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "05d912504c60c71d",
+        "type": "comment",
+        "z": "9dfae3c1d5d0d977",
+        "name": "── INFLUXDB ──",
+        "info": "Salva nível e distância separadamente para facilitar queries no Grafana/Dashboard.",
+        "x": 680,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "a790e860237af418",
+        "type": "function",
+        "z": "9dfae3c1d5d0d977",
+        "name": "Extrai Nível",
+        "func": "var id = msg.payload.id || 'desconhecido';\nmsg.payload = [{ value: msg.payload.nivel, lixeira_id: id }];\nreturn msg;",
+        "outputs": 1,
+        "x": 620,
+        "y": 260,
+        "wires": [
+            [
+                "e9f97957a41e3da8"
+            ]
+        ]
+    },
+    {
+        "id": "f8fe7c7de081cceb",
+        "type": "function",
+        "z": "9dfae3c1d5d0d977",
+        "name": "Extrai Distância",
+        "func": "var id = msg.payload.id || 'desconhecido';\nmsg.payload = [{ value: msg.payload.distancia, lixeira_id: id }];\nreturn msg;",
+        "outputs": 1,
+        "x": 620,
+        "y": 320,
+        "wires": [
+            [
+                "43ea7e830f5f77c9"
+            ]
+        ]
+    },
+    {
+        "id": "e9f97957a41e3da8",
+        "type": "influxdb out",
+        "z": "9dfae3c1d5d0d977",
+        "influxdb": "influx-server",
+        "name": "InfluxDB – Nível",
+        "measurement": "nivel_lixeira",
+        "precision": "ms",
+        "retentionPolicy": "",
+        "database": "",
+        "retentionPolicyV18Flux": "",
+        "org": "c71e849dfc6f13e4",
+        "bucket": "lixeiras_dados",
+        "x": 860,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "43ea7e830f5f77c9",
+        "type": "influxdb out",
+        "z": "9dfae3c1d5d0d977",
+        "influxdb": "influx-server",
+        "name": "InfluxDB – Distância",
+        "measurement": "distancia_lixeira",
+        "precision": "ms",
+        "retentionPolicy": "",
+        "database": "",
+        "retentionPolicyV18Flux": "",
+        "org": "c71e849dfc6f13e4",
+        "bucket": "lixeiras_dados",
+        "x": 860,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "a8d45128edbf2b59",
+        "type": "comment",
+        "z": "9dfae3c1d5d0d977",
+        "name": "── ALERTAS CRÍTICOS (nível > 85%) ──",
+        "info": "Filtra apenas mensagens com nível acima do threshold.\nPublica alerta no tópico mackenzie/lixeiras/alertas.",
+        "x": 640,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "81e1e12e957a4a3b",
+        "type": "function",
+        "z": "9dfae3c1d5d0d977",
+        "name": "Verifica Alerta Crítico",
+        "func": "if (msg.topic && msg.topic.indexOf('/alertas') !== -1) {\n    return null;\n}\n\nvar nivel = msg.payload.nivel;\nvar id = msg.payload.id;\nif (!id) {\n    var partes = msg.topic.split('/');\n    id = partes[partes.length - 1];\n}\n\nvar chave = 'alerta_' + id;\nvar ultimoAlerta = context.get(chave)  0;\nvar agora = Date.now();\n\nif (nivel >= 85 && (agora - ultimoAlerta) > 300000) {\n    context.set(chave, agora);\n    msg.payload = {\n        tipo: 'CRITICO',\n        lixeira: id,\n        local: msg.payload.local  '',\n        nivel: nivel,\n        mensagem: id + ' nivel critico: ' + nivel.toFixed(1) + '%',\n        timestamp: new Date().toISOString()\n    };\n    return msg;\n}\nreturn null;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 3,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 640,
+        "y": 460,
+        "wires": [
+            [
+                "34c93210f4085e7a",
+                "e6f06a5b21f643fe",
+                "3fc07f5016a8337e"
+            ]
+        ]
+    },
+    {
+        "id": "3fc07f5016a8337e",
+        "type": "debug",
+        "z": "9dfae3c1d5d0d977",
+        "name": "Debug alertas",
+        "active": true,
+        "tosidebar": true,
+        "x": 880,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "34c93210f4085e7a",
+        "type": "mqtt out",
+        "z": "9dfae3c1d5d0d977",
+        "name": "Publica Alerta MQTT",
+        "topic": "mackenzie/lixeiras/alertas",
+        "qos": "1",
+        "retain": "false",
+        "broker": "broker-hivemq",
+        "x": 880,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "e6f06a5b21f643fe",
+        "type": "function",
+        "z": "9dfae3c1d5d0d977",
+        "name": "Formata para InfluxDB",
+        "func": "msg.payload = [{\n    value:       msg.payload.nivel,\n    lixeira_id:  msg.payload.lixeira,\n    local:       msg.payload.local,\n    tipo_alerta: msg.payload.tipo\n}];\nreturn msg;",
+        "outputs": 1,
+        "x": 880,
+        "y": 500,
+        "wires": [
+            [
+                "614c0b56d3b30bd8"
+            ]
+        ]
+    },
+    {
+        "id": "614c0b56d3b30bd8",
+        "type": "influxdb out",
+        "z": "9dfae3c1d5d0d977",
+        "influxdb": "influx-server",
+        "name": "InfluxDB – Alertas",
+        "measurement": "alertas_lixeira",
+        "precision": "ms",
+        "retentionPolicy": "",
+        "database": "",
+        "retentionPolicyV18Flux": "",
+        "org": "c71e849dfc6f13e4",
+        "bucket": "lixeiras_dados",
+        "x": 1080,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "ecf97e2628ff1fac",
+        "type": "comment",
+        "z": "9dfae3c1d5d0d977",
+        "name": "── DADOS PARA O DASHBOARD (Tela 2) ──",
+        "info": "Agrega o estado de todas as lixeiras em um único objeto JSON\ne publica no tópico mackenzie/dashboard/status para o painel operacional.",
+        "x": 640,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "68343b1fe56d45f8",
+        "type": "function",
+        "z": "9dfae3c1d5d0d977",
+        "name": "Agrega Estado Global",
+        "func": "// Mantém estado de todas as lixeiras no contexto global\nvar estado = global.get('lixeiras_estado') || {};\nvar dados  = msg.payload;\n\nif (dados.id) {\n    estado[dados.id] = {\n        id:         dados.id,\n        local:      dados.local,\n        nivel:      dados.nivel,\n        distancia:  dados.distancia,\n        status:     dados.nivel >= 85 ? 'CRITICA'\n                  : dados.nivel >= 60 ? 'ATENCAO'\n                  : dados.nivel <= 10 ? 'VAZIA'\n                  : 'NORMAL',\n        updated_at: new Date().toISOString()\n    };\n    global.set('lixeiras_estado', estado);\n}\n\n// Monta resumo para o dashboard\nvar lista   = Object.values(estado);\nvar total   = lista.length;\nvar criticas = lista.filter(l => l.status === 'CRITICA').length;\nvar atencao  = lista.filter(l => l.status === 'ATENCAO').length;\nvar normais  = lista.filter(l => l.status === 'NORMAL').length;\nvar vazias   = lista.filter(l => l.status === 'VAZIA').length;\n\nmsg.payload = {\n    lixeiras:  lista,\n    resumo: {\n        total:    total,\n        criticas: criticas,\n        atencao:  atencao,\n        normais:  normais,\n        vazias:   vazias\n    },\n    timestamp: new Date().toISOString()\n};\n\nreturn msg;",
+        "outputs": 1,
+        "x": 640,
+        "y": 640,
+        "wires": [
+            [
+                "236ec1babec5aa66",
+                "bc4b6bd6e63ea478"
+            ]
+        ]
+    },
+    {
+        "id": "236ec1babec5aa66",
+        "type": "mqtt out",
+        "z": "9dfae3c1d5d0d977",
+        "name": "Publica Dashboard MQTT",
+        "topic": "mackenzie/dashboard/status",
+        "qos": "0",
+        "retain": "true",
+        "broker": "broker-hivemq",
+        "x": 890,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "bc4b6bd6e63ea478",
+        "type": "debug",
+        "z": "9dfae3c1d5d0d977",
+        "name": "Debug dashboard",
+        "active": false,
+        "tosidebar": true,
+        "x": 890,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "broker-hivemq",
+        "type": "mqtt-broker",
+        "name": "HiveMQ",
+        "broker": "broker.hivemq.com",
+        "port": "1883",
+        "clientid": "nodered-lixeiras",
+        "usetls": false,
+        "compatmode": false,
+        "keepalive": "60",
+        "cleansession": true
+    },
+    {
+        "id": "influx-server",
+        "type": "influxdb",
+        "hostname": "SUA_URL_AQUI",
+        "port": "443",
+        "protocol": "https",
+        "database": "lixeiras_dados",
+        "name": "InfluxDB Cloud",
+        "usetls": true,
+        "tls": "",
+        "influxdbVersion": "2.0",
+        "url": "https://us-east-1-1.aws.cloud2.influxdata.com",
+        "timeout": "",
+        "rejectUnauthorized": true
+    },
+    {
+        "id": "2599c692594b660f",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-influxdb": "0.7.0"
+        }
+    }
+]
