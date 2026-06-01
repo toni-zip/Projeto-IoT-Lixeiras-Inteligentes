@@ -1,184 +1,321 @@
-# ♻️ Lixeiras Inteligentes IoT
+# ♻️ Projeto IoT - Lixeiras Inteligentes
 
-Projeto acadêmico desenvolvido para monitoramento inteligente de lixeiras utilizando **ESP32, MQTT, Node-RED e InfluxDB**.
+Sistema de monitoramento inteligente de resíduos utilizando conceitos de Internet das Coisas (IoT), desenvolvido na Universidade Presbiteriana Mackenzie.
 
-## 📌 Sobre o projeto
-
-Este projeto simula um sistema de lixeiras inteligentes capaz de monitorar o nível de ocupação de diferentes lixeiras em tempo real.
-
-Cada lixeira envia informações simuladas para um broker MQTT, que são processadas pelo Node-RED, armazenadas no InfluxDB e utilizadas para geração de alertas e visualização em dashboard.
-
-A proposta é aplicar conceitos de **Internet das Coisas (IoT)** em um cenário de automação urbana.
+O projeto simula seis lixeiras inteligentes conectadas a uma arquitetura baseada em MQTT, Node-RED, InfluxDB e Grafana, permitindo monitoramento em tempo real, geração de alertas automáticos e armazenamento histórico das informações.
 
 ---
 
-## 🎯 Objetivo
+# 📖 Sumário
 
-Desenvolver uma solução que permita:
-
-- Monitorar o nível de ocupação de lixeiras
-- Gerar alertas automáticos quando estiverem cheias
-- Armazenar dados históricos
-- Disponibilizar informações para visualização em dashboard
-- Simular uma aplicação prática de IoT
-
----
-
-## 🛠 Tecnologias utilizadas
-
-### Hardware / Simulação
-- ESP32
-- Sensor ultrassônico HC-SR04 (simulado)
-- Wokwi
-
-### Comunicação
-- MQTT
-- Broker HiveMQ
-
-### Processamento
-- Node-RED
-
-### Banco de dados
-- InfluxDB
+- Sobre o Projeto
+- Objetivos
+- Arquitetura da Solução
+- Tecnologias Utilizadas
+- Estrutura do Repositório
+- Funcionamento do Sistema
+- Lixeiras Simuladas
+- Comunicação MQTT
+- Fluxo Node-RED
+- Dashboards Grafana
+- Sistema de Alertas
+- Como Executar
+- Funcionalidades Implementadas
+- Melhorias Futuras
+- Equipe
+- Artigo Científico
+- Demonstração
+- Licença
 
 ---
 
-## 🏗 Arquitetura do sistema
+# 📌 Sobre o Projeto
+
+A gestão de resíduos sólidos é um desafio constante em ambientes urbanos e institucionais.
+
+Este projeto propõe uma solução baseada em IoT para monitorar o nível de ocupação de lixeiras em tempo real, permitindo que equipes de manutenção atuem de forma mais eficiente e reduzindo transbordamentos e deslocamentos desnecessários.
+
+---
+
+# 🎯 Objetivos
+
+✅ Monitorar o nível de ocupação das lixeiras
+
+✅ Gerar alertas automáticos
+
+✅ Armazenar dados históricos
+
+✅ Disponibilizar dashboards em tempo real
+
+✅ Demonstrar integração entre múltiplas tecnologias IoT
+
+---
+
+# 🏗 Arquitetura da Solução
 
 ```text
-ESP32 (simulação)
-   ↓
-MQTT
-   ↓
-Broker HiveMQ
-   ↓
+ESP32 (Wokwi)
+       │
+       ▼
+MQTT (HiveMQ)
+       │
+       ▼
 Node-RED
-   ↓
-InfluxDB
-   ↓
-Dashboard / Alertas
+   ├── Processamento
+   ├── Alertas
+   └── Dashboard MQTT
+       │
+       ▼
+InfluxDB Cloud
+       │
+       ▼
+Grafana
+
+       │
+       ▼
+Telegram
 ```
 
 ---
 
-## 📂 Estrutura do fluxo
+# 🛠 Tecnologias Utilizadas
 
-<img width="1357" height="787" alt="image" src="https://github.com/user-attachments/assets/3ce4da23-66d7-41c1-9957-cec0e9e29f68" />
-
-O fluxo no Node-RED foi dividido em 3 partes principais:
-
-### 1. Recepção MQTT
-Responsável por:
-
-- Receber mensagens das 6 lixeiras
-- Fazer o parse dos dados JSON
-
----
-
-### 2. Armazenamento no InfluxDB
-Os dados são separados em:
-
-- Nível de ocupação
-- Distância medida
-- Alertas críticos
+- ESP32
+- HC-SR04 (simulado)
+- Wokwi
+- MQTT
+- HiveMQ
+- Node-RED
+- InfluxDB Cloud
+- Grafana
+- Telegram Bot API
 
 ---
 
-### 3. Dashboard e alertas
-O sistema:
+# 📂 Estrutura do Repositório
 
-- Identifica lixeiras críticas
-- Publica alertas MQTT
-- Consolida dados para dashboard
+```text
+Projeto-IoT-Lixeiras-Inteligentes
+│
+├── README.md
+├── Trabalho_IoT_LixeirasInteligentes_Final.pdf
+├── nodeRedLixosIOT-2.json
+└── Lixeiras_IOT
+```
 
 ---
 
-## 🗑 Lixeiras simuladas
+# 🗑 Lixeiras Simuladas
 
-| ID | Local |
-|----|------|
+| ID | Localização |
+|------|------|
 | LX-01 | Bloco A - Entrada |
 | LX-02 | Bloco B - Corredor |
 | LX-03 | Biblioteca |
 | LX-04 | Refeitório |
-| LX-05 | Bloco C - Laboratório |
+| LX-05 | Laboratório |
 | LX-06 | Estacionamento |
 
 ---
 
-## ⚙ Funcionamento
+# 📡 Comunicação MQTT
 
-Cada lixeira possui:
+Broker:
 
-- Um nível inicial
-- Uma taxa de enchimento simulada
-- Um tópico MQTT específico
+```text
+broker.hivemq.com
+```
 
-Exemplo de payload enviado:
+Porta:
 
-```json
-{
-  "id": "LX-01",
-  "local": "Bloco A - Entrada",
-  "distancia": 4.5,
-  "nivel": 85.0
-}
+```text
+1883
+```
+
+Tópicos:
+
+```text
+mackenzie/lixeiras/#
+mackenzie/lixeiras/alertas
+mackenzie/dashboard/status
 ```
 
 ---
-## Dashboards gerados pelo Grafana
-# Dashboard 1
-<img width="1492" height="693" alt="image" src="https://github.com/user-attachments/assets/871873d8-f9dc-4f4d-bb0e-da9de0f0bd8b" />
 
-# Dashboard 2
-<img width="1522" height="820" alt="image" src="https://github.com/user-attachments/assets/6d0f2d62-7f10-44ca-8d0d-40859fc45633" />
+# 🔄 Fluxo Node-RED
 
+## Estrutura Completa do Fluxo
 
+Substitua esta seção pela imagem hospedada no GitHub:
 
-## 🚨 Sistema de alerta
+```html
+<img width="1357" height="787" alt="Fluxo Node-RED" src="https://github.com/user-attachments/assets/3ce4da23-66d7-41c1-9957-cec0e9e29f68" />
+```
 
-Quando o nível da lixeira ultrapassa **85%**, o sistema:
+### 1️⃣ Recepção MQTT
 
-- Detecta condição crítica
-- Publica alerta via MQTT
-- Registra evento no InfluxDB
-- Alerta é enviado por uma API do Telegram
+Recebe mensagens das seis lixeiras e realiza o parse JSON.
+
+### 2️⃣ Armazenamento
+
+Measurements:
+
+```text
+nivel_lixeira
+distancia_lixeira
+alertas_lixeira
+```
+
+### 3️⃣ Sistema de Alertas
+
+Quando:
+
+```text
+Nível ≥ 85%
+```
+
+o sistema:
+
+- Publica alerta MQTT
+- Registra no InfluxDB
+- Envia alerta Telegram
+
+### 4️⃣ Consolidação para Dashboard
+
+Publicação:
+
+```text
+mackenzie/dashboard/status
+```
+
+### 5️⃣ Proteção Contra Spam
+
+```text
+1 alerta por lixeira a cada 5 minutos
+```
 
 ---
 
-## Link da Apresentação
+# 📊 Dashboards Grafana
+
+## Dashboard 1 - Visão Geral
+
+Cole a imagem atual do Dashboard 1.
+
+## Dashboard 2 - Monitoramento Individual
+
+Cole a imagem atual do Dashboard 2.
+
+---
+
+# 🚨 Sistema de Alertas
+
+Sempre que uma lixeira atingir:
+
+```text
+>= 85%
+```
+
+o sistema:
+
+- Publica alerta MQTT
+- Atualiza dashboards
+- Registra evento no banco
+- Envia notificação Telegram
+
+---
+
+# ▶ Como Executar
+
+## 1 - Wokwi
+
+Abrir a simulação e iniciar o ESP32.
+
+## 2 - Node-RED
+
+```bash
+npm install -g --unsafe-perm node-red
+node-red
+```
+
+Acessar:
+
+```text
+http://localhost:1880
+```
+
+Importar:
+
+```text
+nodeRedLixosIOT-2.json
+```
+
+## 3 - InfluxDB
+
+Criar bucket:
+
+```text
+lixeiras_dados
+```
+
+## 4 - Grafana
+
+Adicionar datasource InfluxDB e utilizar:
+
+```text
+nivel_lixeira
+distancia_lixeira
+alertas_lixeira
+```
+
+---
+
+# ✅ Funcionalidades Implementadas
+
+- Simulação de 6 lixeiras
+- MQTT
+- Node-RED
+- InfluxDB
+- Grafana
+- Alertas Telegram
+- Dashboards em tempo real
+
+---
+
+# 🚀 Melhorias Futuras
+
+- Sensores físicos
+- Aplicativo mobile
+- Machine Learning
+- Google Maps
+- AWS IoT Core
+
+---
+
+# 👨‍💻 Equipe
+
+- Antonio Pereira
+- Fernando Lacava
+- João Trevisol
+- Matheus Fernandes
+- Wallace Santana
+
+Universidade Presbiteriana Mackenzie
+
+---
+
+# 📄 Artigo Científico
+
+Trabalho_IoT_LixeirasInteligentes_Final.pdf
+
+---
+
+# 🎥 Demonstração
+
 https://youtu.be/anO3y3dcS6Q
 
 ---
 
-## ▶ Como executar
+# 📜 Licença
 
-### 1. Executar a simulação no Wokwi
-Iniciar o código ESP32.
-
-### 2. Executar o Node-RED
-
-```bash
-node-red
-```
-
-Importar o fluxo do projeto.
-
-### 3. Executar o InfluxDB
-
-```bash
-docker run -p 8086:8086 influxdb
-```
-
----
-
-## ✅ Funcionalidades implementadas
-
-- Simulação de 6 lixeiras
-- Envio de dados via MQTT
-- Processamento em tempo real
-- Persistência de dados
-- Geração automática de alertas
-- Consolidação para dashboard
-
----
+Projeto acadêmico desenvolvido para fins educacionais.
